@@ -1,0 +1,39 @@
+name: bewise
+services:
+  bewise-postgres:
+    image: postgres:15.0
+    container_name: bewise-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: "bewise"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "root"
+    networks:
+      - bewise-network
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./database/init_questions.sql:/docker-entrypoint-initdb.d/init_questions.sql
+      - ./postgresql/data:/var/lib/postgresql/data
+  bewise-flask:
+    container_name: bewise-flask
+    image: bewise_flask_image:develop
+    environment:
+      - UI_HOST=0.0.0.0
+      - UI_PORT=80
+      - DB_HOST=bewise-postgres
+      - DB_PORT=5432
+      - DB_DATABASE=bewise
+      - DB_USER=admin
+      - DB_PASSWORD=root
+    depends_on:
+      - bewise-postgres
+    networks:
+      - bewise-network
+    ports:
+      - "80:80"
+    restart: unless-stopped
+networks:
+  bewise-network:
+   name: bewise-network
+   driver: bridge
